@@ -33,7 +33,8 @@
 
 * Chinamming网格剖分：https://blog.csdn.net/Chinamming/article/details/16874371
 * 纸异兽博客：https://www.cnblogs.com/zhiyishou/p/4430017.html
-* eearth 简书：https://www.jianshu.com/p/172749e6116a
+* eearth Bowyer&Watson逐点插入法：https://www.jianshu.com/p/172749e6116a
+* ironwallaby 前端 Delaunay实现：https://github.com/ironwallaby/delaunay
 * jeanbroid openGL显示：https://github.com/jeanbroid/delaunay-cpp
 * Paul Bourke 逐点插入法：http://paulbourke.net/papers/triangulate/
 * Samuel Peterson分治法算法：http://www.geom.uiuc.edu/~samuelp/del_project.html
