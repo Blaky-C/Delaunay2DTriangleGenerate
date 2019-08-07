@@ -31,51 +31,81 @@ Delaunay::~Delaunay() {
 
 }
 
-void readPointFromTxt(string inTxt) {
-	ifstream inFile(inTxt);
+void Delaunay::readPointFromTxt(string inTxt) {
+	openInputFile(inTxt);
 	
-	if (!inFile) {
-		// judge if the file is opened correctly
-		cout << "ERROR!Unable to input nodes!\n";
-		exit(1);
-	}
-
 	string line; // record each read line
+	line = readLineFromInput();
+	int nodeSize = parseStringToInteger(line);
 
+	for (int i = 0; i < nodeSize; i++) {
+		
+		line = readLineFromInput();
+		ptsList.push_back(parseLineToPointWithComma(line));
+		/*readPoint(xx, yy, zz, line);
+		myMesh.addPoint(xx, yy, zz);*/
+	}
 	
-
-
-
-
+	closeInputFile();
 }
 
-void readPoint(double &xx, double &yy, double &zz, string line) {
-	//从字符串line中解析出点的x,y,z坐标  
-	int flag = 0;
-	string tmp = "";
-	char *cstr;
-	for (int i = (int)line.find(',') + 1; i < (int)line.size(); i++) {
-		if (line[i] == ',') {
-			cstr = new char[tmp.size() + 1];
-			strcpy(cstr, tmp.c_str());
-			if (flag == 0) { 
-				xx = atof(cstr); 
-				tmp.resize(0); 
-				flag++; 
-			} else if (flag == 1) { 
-				yy = atof(cstr); 
-				tmp.resize(0); 
-				flag++; 
-			}
-			
-			continue;
-		}
-		tmp = tmp + line[i];
-	}
+Triangle* Delaunay::generateSuperTriangle() {
+	// define x is in [-100, 100]
+	// define y is in [-100, 100]
 	
-	if (fabs(xx) < 1.0e-6) xx = 0.0;
-	if (fabs(yy) < 1.0e-6) yy = 0.0;
-	if (fabs(zz) < 1.0e-6) zz = 0.0;
+	double xmin = ptsList[0].x;
+	double xmax = ptsList[0].x;
+	double ymin = ptsList[0].y;
+	double ymax = ptsList[0].y;
+
+	for (vector <Point>::iterator it = ptsList.begin(); it != ptsList.end(); it++) {
+		if (it->x < xmin) xmin = it->x;
+		if (it->x > xmax) xmax = it->x;
+		if (it->y < ymin) ymin = it->y;
+		if (it->y > ymax) ymax = it->y;
+	}
+
+	double dx = xmax - xmin;
+	double dy = ymax - ymin;
+	
+	double dmax = (dx > dy) ? dx : dy;
+	double xmid = xmin + dx * 0.5;
+	double ymid = ymin + dy * 0.5;
+	
+	Point p1 = { xmid - 20 * dmax, ymid - dmax };
+	Point p2 = { xmid, ymid + 20 * dmax };
+	Point p3 = { xmid + 20 * dmax, ymid - dmax };
+
+	ptsList[0] = p1;
+	ptsList[1] = p2;
+	ptsList[2] = p3;
+
+	Edge l1 = { 0, 1, -1 };
+	Edge l2 = { 1, 2, -1 };
+	Edge l3 = { 0, 2, -1 };
+
+	edgsList[0] = l1;
+	edgsList[1] = l2;
+	edgsList[2] = l3;
+
+	makeTriangle(0, 1, 2);
+	makeTriangle(0, 2, 3);
+	return[
+		[],
+			[],
+			[]
+	];
+}
+
+int Delaunay::inCircle(Point p, Triangle tris) {
+	// judge if the point is in the circumcircle of the triangle
+	// 0: point is on the circle
+	// 1: point is in the circle
+	// -1: point is out of the circle
+	double dis = sqrt((tris.cir->x - p.x)*(tris.cir->x - p.x) + (tris.cir->y - p.y)*(tris.cir->y - p.y));
+	if (fabs(dis - tris.cir->radius) < 1.0e-6) return 0;
+	else if (dis - tris.cir->radius >= 1.0e-6) return -1;
+	else return 1;
 }
 
 void Delaunay::makeTriangle(int n1, int n2, int n3) {
@@ -121,20 +151,9 @@ void Delaunay::makeTriangle(int n1, int n2, int n3) {
 	}
 }
 
-void Delaunay::calcCentre(double &x_centre, double &y_centre, double &radius, int n1, int n2, int n3) {
 
-	double x1, x2, x3, y1, y2, y3;
-	x1 = myPts[n1].x;
-	y1 = myPts[n1].y;
-	x2 = myPts[n2].x;
-	y2 = myPts[n2].y;
-	x3 = myPts[n3].x;
-	y3 = myPts[n3].y;
-	x_centre = ((y2 - y1)*(y3*y3 - y1*y1 + x3*x3 - x1*x1) - (y3 - y1)*(y2*y2 - y1*y1 + x2*x2 - x1*x1)) 
-		/ (2 * (x3 - x1)*(y2 - y1) - 2 * ((x2 - x1)*(y3 - y1)));//计算外接圆圆心的x坐标  
-	y_centre = ((x2 - x1)*(x3*x3 - x1*x1 + y3*y3 - y1*y1) - (x3 - x1)*(x2*x2 - x1*x1 + y2*y2 - y1*y1)) 
-		/ (2 * (y3 - y1)*(x2 - x1) - 2 * ((y2 - y1)*(x3 - x1)));//计算外接圆圆心的y坐标  
-	radius = sqrt((x1 - x_centre)*(x1 - x_centre) + (y1 - y_centre)*(y1 - y_centre));//计算外接圆的半径  
+
+bool Delaunay::addPoint(Point p) {
 
 }
 
@@ -168,12 +187,6 @@ bool Delaunay::addPoint(double xx, double yy, double zz) {
 	return true;
 }
 
-bool Delaunay::inCircle(double xx, double yy, Triangle currentTris) {
-	// 判断点是否在三角形的外接圆内
-	double dis = sqrt((currentTris.xc - xx)*(currentTris.xc - xx) + (currentTris.yc - yy)*(currentTris.yc - yy));
-	if (dis > currentTris.r) return false;
-	else return true;
-}
 
 void Delaunay::delTriangle(int n, EdgeArray &boundEdges) {
 	for (int i = 0; i < 3; i++) {
@@ -263,4 +276,6 @@ void Delaunay::boundaryRecover(int fromPoint, int toPoint) {
 		}
 	}
 }
+
+
 
